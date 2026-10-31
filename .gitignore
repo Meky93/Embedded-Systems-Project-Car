@@ -1,12 +1,7 @@
 Binaries/
-Includes/
 Compiled/
 Debug/
-targetConfigs/
-lnk_msp430fr2355.cmd
 Release/
-.ccsproject
-.cproject
 .launches/homework 3a.launch
 .project
 .settings/org.eclipse.cdt.codan.core.prefs
