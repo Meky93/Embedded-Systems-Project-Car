@@ -224,5 +224,8 @@ void Line_Run_Stop(void);
 void Line_Run_Process(unsigned int now, unsigned char fresh,
                       unsigned int left, unsigned int right, unsigned int center);
 
+static void set_line_status(const char *message);
+
+
 
 

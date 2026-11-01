@@ -6,6 +6,13 @@
  *  Compiler: Code Composer 12.8.1
  */
 
+
+
+// This file, macros.h, was created to contain the many #define statements of the program.
+// This "cleans up" other files and provides one central place for all define statements.
+
+#include "msp430.h"
+
 // Global Variables:
 extern volatile unsigned int event;
 extern volatile unsigned int time_change;
@@ -18,11 +25,6 @@ extern unsigned int left_motor_count;
 extern unsigned int right_motor_count;
 extern unsigned int segment_count;
 extern unsigned int shape_phase;
-
-// This file, macros.h, was created to contain the many #define statements of the program.
-// This "cleans up" other files and provides one central place for all define statements.
-
-#include "msp430.h"
 
 // General #define statements
 #define ALWAYS                      (0x01)

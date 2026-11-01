@@ -5,6 +5,7 @@
  *      Author: Jake
  */
 
+#include "msp430.h"
 #include "functions.h"
 #include "macros.h"
 #include "ports.h"

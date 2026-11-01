@@ -19,8 +19,7 @@ volatile unsigned char smclk_mode = USE_GPIO;
 
 
 // This is the main (parent) ports function that calls the 6 individual Init_port_<i> functions.
-void Init_Ports(void)
-{
+void Init_Ports(void){
     Init_Port_1();
     Init_Port_2();
     Init_Port_3(smclk_mode);

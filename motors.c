@@ -26,6 +26,15 @@ static unsigned int last_demo_count = 0xFFFF;
 extern volatile unsigned int ADC_global;
 extern unsigned int now;
 
+// -------------------------------- Display Updating for States ---------------------------
+static void set_line_status(const char *message){
+    if (strcmp(display_line[0], message) != 0){       // Only update display when a change to the message has been made rather than continuously.
+        strcpy(display_line[0], message);
+        display_changed = TRUE;
+        Display_Update(0, 0, 0, 0);
+    }
+}
+
 // --------------------------------- Straight Event ----------------------------------------
 void Run_Straight(void){
     switch(state){
@@ -115,9 +124,7 @@ void start_case(void){
 void run_case_straight(void){
     if(!demo_started){
         demo_started = 1;
-        strcpy(display_line[0], " STRAIGHT ");
-        display_changed = TRUE;
-        Display_Update(0,0,0,0);
+        set_line_status(" STRAIGHT ");
     }
     if(!time_change){
         return;
@@ -174,8 +181,7 @@ static unsigned char line_state = LR_IDLE;
 static unsigned char line_motion = 0;
 static unsigned int line_started;
 
-void Line_Run_Stop(void)
-{
+void Line_Run_Stop(void){
     Stop();
     line_state = LR_IDLE;
     line_motion = 0;
@@ -187,8 +193,7 @@ void Line_Run_Stop(void)
     SAC3DAC &= ~DACEN;
 }
 
-void Line_Run_Start(void)
-{
+void Line_Run_Start(void){
     if (line_state != LR_IDLE) return;
     Stop();
     line_motion = 0;
@@ -204,24 +209,20 @@ void Line_Run_Start(void)
     line_state = LR_DAC;
 }
 
-
 void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, unsigned int right, unsigned int center){
 
     unsigned char requested;
 
-    if (state == END && line_state != LR_IDLE) {
+    if (state == END && line_state != LR_IDLE){
         Line_Run_Stop();
         return;
     }
-
 
     switch (line_state){
 
         case LR_DAC:
 
-            strcpy(display_line[0], "Starting..");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Starting..");
 
             if (DAC_data == DAC_Limit && fresh){
                 Forward_On();
@@ -231,9 +232,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_APPROACH:
 
-            strcpy(display_line[0], "Intrcpting");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Intrcpting");
 
             if (fresh && center > LINE_DETECT_THRESHOLD){
 
@@ -248,9 +247,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_PAUSE:
 
-            strcpy(display_line[0], "Waiting...");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Waiting...");
 
             // -- Drop the DAC value early so it actively steps down/settles during the pause ---
             if ((unsigned int)(now - line_started) == 0){
@@ -273,17 +270,13 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_TURN:
 
-            strcpy(display_line[0], " Turning  ");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
-
+            set_line_status(" Turning  ");
 
             if ((unsigned int)(now - line_started) >= LINE_TURN_TICKS){
 
                 // -- The line_state stays in LR_Turn until the number of --
                 // -- of 5ms ticks defined by LINE_TURN_TICKS in macros.h --
                 // -- then resets timer and continunes to LR_AFTER_TURN. ---
-
 
                 Stop();
                 line_started = now;                                             // Update line_started with the current time!
@@ -293,9 +286,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_AFTER_TURN:
 
-            strcpy(display_line[0], "Intrcpting");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Intrcpting");
 
             if ((unsigned int)(now - line_started) >= LINE_PAUSE_TICKS){
 
@@ -311,9 +302,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_FOLLOW:
 
-            strcpy(display_line[0], " Circling ");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status(" Circling ");
 
             if ((unsigned int)(now - line_started) >= LINE_FOLLOW_TICKS){
 
@@ -357,34 +346,23 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
             if (requested != line_motion){
                 if (requested == 1){                                    // Explicitly handle return to center case from non center previous case.
                     Forward_On();
-                    strcpy(display_line[0], " Circling ");
-                    display_changed = TRUE;
-                    Display_Update(0, 0, 0, 0);
+                    set_line_status(" Circling ");
                 }
                 else if (requested == 2){
                     Turn_Right_Forward();
-                    strcpy(display_line[0], "Searching!");
-                    display_changed = TRUE;
-                    Display_Update(0, 0, 0, 0);
+                    set_line_status("Searching!");
                 }
                 else if (requested == 3){
                     Turn_Left_Forward();
-                    strcpy(display_line[0], "Searching!");
-                    display_changed = TRUE;
-                    Display_Update(0, 0, 0, 0);
+                    set_line_status("Searching!");
                 }
                 else if (requested == 4){
                     Turn_Right_Forward();
-                    strcpy(display_line[0], "Searching!");
-                    display_changed = TRUE;
-                    Display_Update(0, 0, 0, 0);
+                    set_line_status("Searching!");
                 }
                 else{
-
                     Forward_On();
-                    strcpy(display_line[0], " Circling ");
-                    display_changed = TRUE;
-                    Display_Update(0, 0, 0, 0);
+                    set_line_status(" Circling ");
                 }
             }
             line_motion = requested;                                    // "requested" is either a 1, 2, 3, or 4, based on IR Detector Threshold values
@@ -392,11 +370,9 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_EXIT_PAUSE:
 
-            strcpy(display_line[0], "Waiting...");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Waiting...");
 
-            // -- Drop the DAC value early so it actively steps down/settles during the pause ---
+            // -- Drop the DAC value early so it actively steps down/settles during the pause --
             if ((unsigned int)(now - line_started) == 0){
                 DAC_data = DAC_Begin;                                           // Force voltage to 2V ASAP!
                 SAC3DAT = DAC_data;                                             // Write to hardware register.
@@ -417,9 +393,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_EXIT_TURN:
 
-            strcpy(display_line[0], " Turning  ");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status(" Turning  ");
 
             if ((unsigned int)(now - line_started) >= LINE_TURN_TICKS){
 
@@ -435,9 +409,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_EXIT_AFTER_TURN:
 
-            strcpy(display_line[0], "Waiting...");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Waiting...");
 
             if ((unsigned int)(now - line_started) >= LINE_PAUSE_TICKS){
                 Forward_On();
@@ -448,16 +420,12 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
         case LR_EXIT_FORWARD:
 
-            strcpy(display_line[0], "Finishing ");
-            display_changed = TRUE;
-            Display_Update(0, 0, 0, 0);
+            set_line_status("Finishing!");
 
             if ((unsigned int)(now - line_started) >= LINE_EXIT_FORWARD_TICKS){
                 Line_Run_Stop();
                 P6OUT &= ~LCD_BACKLITE;
-                strcpy(display_line[0], " Stopped  ");
-                display_changed = TRUE;
-                Display_Update(0, 0, 0, 0);
+                set_line_status(" Stopped  ");
             }
             break;
 
@@ -470,12 +438,7 @@ void Line_Run_Process(unsigned int now, unsigned char fresh, unsigned int left, 
 
 
 
-
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
+// ------------------------------------------------------------ Unused for Now -----------------------------------------------------------------------------------------
 
 
 /*
